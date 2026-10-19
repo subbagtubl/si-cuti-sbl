@@ -9,7 +9,7 @@ import ApprovalTab from "./components/ApprovalTab";
 import EmployeeDirTab from "./components/EmployeeDirTab";
 import BknPrintModal from "./components/BknPrintModal";
 
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5wOKDuV7tz6-zpUSAukQ6PPcON7q4ivZpSHcZoRb-MKFAAowsm9k0sTQRb6ToTCdf/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxzT57Sm5x_vFPz7UxmqUbkJ4Ag6DuL2PHota4n2tLN8BviZY2G5SWIsCEK_tif-GT9/execexec";
 
 export default function App() {
   const [employees, setEmployees] = useState([]);
