@@ -1,17 +1,46 @@
 import React, { useState } from "react";
 import * as XLSX from "xlsx";
 
+// Ganti URL ini dengan URL Web App hasil Deploy Google Apps Script Anda
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz7tZIeaQFvWtHKKPbKy7Nnf5H7YMot3o3AB4EOHC_-tcLlu3RxsEwZAMbQijd93dKA/exec";
+
 export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [isSaving, setIsSaving] = useState(false);
 
-  // State untuk kontrol Modal Edit Kuota
+  // State untuk Modal Edit Kuota
   const [editingEmp, setEditingEmp] = useState(null);
   const [quotaForm, setQuotaForm] = useState({
     kuotaN: 0,
     kuotaN1: 0,
     kuotaN2: 0,
   });
+
+  // State untuk Modal Kelola Akun / Password
+  const [passwordEmp, setPasswordEmp] = useState(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Fungsi Sinkronisasi Data ke Google Spreadsheet via Drive
+  const saveToGoogleDrive = async (updatedEmployees) => {
+    setIsSaving(true);
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "saveEmployees",
+          data: updatedEmployees,
+        }),
+      });
+      console.log("Data pegawai & password berhasil tersimpan ke Google Spreadsheet!");
+    } catch (error) {
+      console.error("Gagal menyimpan ke Google Drive:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleOpenEditQuota = (emp) => {
     setEditingEmp(emp);
@@ -38,10 +67,35 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
     );
 
     onUpdateEmployees(updated);
+    saveToGoogleDrive(updated); // Simpan otomatis ke Spreadsheet
     setEditingEmp(null);
   };
 
-  // Fungsi Export / Unduh Template Excel (Tanpa Kolom Password)
+  const handleOpenPasswordModal = (emp) => {
+    setPasswordEmp(emp);
+    setNewPassword(emp.password || "");
+    setShowPassword(false);
+  };
+
+  const handleSavePassword = (e) => {
+    e.preventDefault();
+    if (!passwordEmp) return;
+
+    const updated = employees.map((item) =>
+      item.nik === passwordEmp.nik
+        ? {
+            ...item,
+            password: newPassword,
+          }
+        : item
+    );
+
+    onUpdateEmployees(updated);
+    saveToGoogleDrive(updated); // Simpan otomatis ke Spreadsheet
+    alert(`Password untuk ${passwordEmp.nama} berhasil diperbarui dan tersimpan di Google Drive!`);
+    setPasswordEmp(null);
+  };
+
   const downloadTemplate = () => {
     const exportData =
       employees && employees.length > 0
@@ -97,6 +151,7 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
 
       if (rows.length > 0) {
         const parsed = rows.map((r, i) => {
+          const nik = String(r["NIK/USERNAME"] || "").trim();
           const mkStr = String(r["MASA KERJA"] || "1 Tahun 0 Bulan");
           const matchYr = mkStr.match(/(\d+)\s*Tahun/i);
           const yrs = matchYr ? parseInt(matchYr[1], 10) : 1;
@@ -105,7 +160,10 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
           if (jabatan === "Kepala") role = "KEPALA_SENTRA";
           else if (jabatan === "Kepala Sub Bagian Tata Usaha") role = "KASUBBAG_TU";
 
-          // Gunakan operator ?? (Nullish Coalescing) agar angka 0 tetap diakui
+          const existingEmp = employees.find((emp) => emp.nik === nik);
+          const excelPassword = r["PASSWORD"] !== undefined ? String(r["PASSWORD"]).trim() : "";
+          const finalPassword = excelPassword || existingEmp?.password || "";
+
           const statusKep = String(r["STATUS KEPEGAWAIAN"] || "");
           const defaultN1 = statusKep.includes("PNS") && yrs >= 2 ? 6 : 0;
 
@@ -117,7 +175,7 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
             no: r["NO"] || i + 1,
             nama: String(r["NAMA"] || "").trim(),
             nip: String(r["NIP"] || "").trim(),
-            nik: String(r["NIK/USERNAME"] || "").trim(),
+            nik: nik,
             pangkat: String(r["PANGKAT/ GOLONGAN"] || "").trim(),
             jabatan,
             hp: String(r["NO. HANDPHONE"] || "").trim(),
@@ -125,7 +183,7 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
             status: String(r["STATUS KEPEGAWAIAN"] || "PNS SENTRA").trim(),
             masaKerja: mkStr,
             masaKerjaTahun: yrs,
-            password: String(r["PASSWORD"] || "").trim(),
+            password: finalPassword,
             role,
             kuotaN: isNaN(parseInt(rawN, 10)) ? 12 : parseInt(rawN, 10),
             kuotaN1: isNaN(parseInt(rawN1, 10)) ? 0 : parseInt(rawN1, 10),
@@ -134,7 +192,8 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
         });
 
         onUpdateEmployees(parsed);
-        alert(`Berhasil memperbarui ${parsed.length} data pegawai dari file Excel.`);
+        saveToGoogleDrive(parsed); // Simpan hasil import ke Google Spreadsheet
+        alert(`Berhasil memperbarui ${parsed.length} data pegawai dan menyimpannya ke Google Drive.`);
       }
     };
     reader.readAsArrayBuffer(file);
@@ -158,6 +217,11 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
           <div>
             <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
               <i className="fa-solid fa-users text-kemensos-navy"></i> Data Pegawai Sentra Budi Luhur di Banjarbaru
+              {isSaving && (
+                <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-normal animate-pulse">
+                  <i className="fa-solid fa-cloud-arrow-up mr-1"></i> Menyimpan ke Drive...
+                </span>
+              )}
             </h3>
             <p className="text-xs text-slate-500">
               Daftar pegawai aktif beserta sisa kuota cuti tahunan berjalan.
@@ -260,13 +324,22 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
                       )}
                     </td>
                     <td className="py-2.5 px-3 text-center">
-                      <button
-                        onClick={() => handleOpenEditQuota(emp)}
-                        className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] inline-flex items-center gap-1 shadow-sm transition-colors"
-                        title="Edit Kuota Cuti N, N-1 & N-2"
-                      >
-                        <i className="fa-solid fa-pen-to-square"></i> Edit Kuota
-                      </button>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => handleOpenEditQuota(emp)}
+                          className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] inline-flex items-center gap-1 shadow-sm transition-colors"
+                          title="Edit Kuota Cuti N, N-1 & N-2"
+                        >
+                          <i className="fa-solid fa-pen-to-square"></i> Edit Kuota
+                        </button>
+                        <button
+                          onClick={() => handleOpenPasswordModal(emp)}
+                          className="px-2.5 py-1 rounded-lg bg-slate-700 hover:bg-slate-800 text-white font-bold text-[11px] inline-flex items-center gap-1 shadow-sm transition-colors"
+                          title="Lihat & Ubah Password Akun Pegawai"
+                        >
+                          <i className="fa-solid fa-key"></i> Akun
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -276,11 +349,10 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
         </div>
       </div>
 
-      {/* Modern Pop-Up Modal Edit Kuota */}
+      {/* Modal Edit Kuota */}
       {editingEmp && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden transform transition-all">
-            {/* Modal Header */}
             <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold">
@@ -300,7 +372,6 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
               </button>
             </div>
 
-            {/* Modal Body */}
             <form onSubmit={handleSaveQuota}>
               <div className="p-6 space-y-4">
                 <div className="bg-amber-50 border border-amber-200/70 rounded-xl p-3 text-xs text-amber-900 flex items-start gap-2.5">
@@ -361,7 +432,6 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
                 </div>
               </div>
 
-              {/* Modal Footer */}
               <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2.5">
                 <button
                   type="button"
@@ -375,6 +445,95 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
                   className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition-colors"
                 >
                   <i className="fa-solid fa-check"></i> Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Kelola Akun / Reset Password */}
+      {passwordEmp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden transform transition-all">
+            <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-slate-800 text-white flex items-center justify-center font-bold">
+                  <i className="fa-solid fa-key text-base"></i>
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-800 text-sm">Kelola Akun Pegawai</h4>
+                  <p className="text-xs text-slate-500 font-medium">{passwordEmp.nama}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPasswordEmp(null)}
+                className="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg hover:bg-slate-200/60 flex items-center justify-center transition-colors"
+              >
+                <i className="fa-solid fa-xmark text-sm"></i>
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePassword}>
+              <div className="p-6 space-y-4">
+                <div className="bg-slate-100 border border-slate-200 rounded-xl p-3 text-xs text-slate-700 flex items-start gap-2.5">
+                  <i className="fa-solid fa-user-shield text-slate-600 text-sm mt-0.5"></i>
+                  <div>
+                    Username login pegawai adalah <strong>NIK (16 Digit)</strong>. Anda dapat melihat atau memperbarui password akun secara langsung di sini.
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Username (NIK)
+                  </label>
+                  <input
+                    type="text"
+                    value={passwordEmp.nik}
+                    disabled
+                    className="w-full px-3 py-2 rounded-xl bg-slate-100 border border-slate-300 text-xs font-mono font-bold text-slate-600 cursor-not-allowed"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Password Akun
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full pl-3 pr-10 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 focus:outline-none focus:border-slate-800 focus:ring-2 focus:ring-slate-200"
+                      placeholder="Masukkan password baru..."
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 text-xs"
+                      title={showPassword ? "Sembunyikan Password" : "Lihat Password"}
+                    >
+                      <i className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setPasswordEmp(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200/70 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition-colors"
+                >
+                  <i className="fa-solid fa-floppy-disk"></i> Simpan Password
                 </button>
               </div>
             </form>
