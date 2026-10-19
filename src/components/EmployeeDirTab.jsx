@@ -5,6 +5,20 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
+  const handleEditQuota = (emp) => {
+    const newN = prompt(`Masukkan jumlah kuota Cuti Tahunan (N) untuk ${emp.nama}:`, emp.kuotaN);
+    if (newN === null) return;
+    const newN1 = prompt(`Masukkan sisa kuota N-1 untuk ${emp.nama}:`, emp.kuotaN1 || 0);
+    if (newN1 === null) return;
+
+    const updated = employees.map((item) => 
+      item.nik === emp.nik 
+        ? { ...item, kuotaN: parseInt(newN, 10) || 0, kuotaN1: parseInt(newN1, 10) || 0 } 
+        : item
+    );
+    onUpdateEmployees(updated);
+  };
+
   const importExcelFile = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -124,7 +138,8 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
                 <th className="py-3 px-3">Jabatan</th>
                 <th className="py-3 px-3">Status</th>
                 <th className="py-3 px-3">Masa Kerja</th>
-                <th className="py-3 px-3 text-center">Sisa Cuti (N)</th>
+                <th className="py-3 px-3 text-center">Sisa Cuti (N & N-1)</th>
+                <th className="py-3 px-3 text-center">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
@@ -151,7 +166,20 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
                       </span>
                     </td>
                     <td className="py-2.5 px-3 whitespace-nowrap">{emp.masaKerja}</td>
-                    <td className="py-2.5 px-3 font-bold text-center">{emp.kuotaN} Hr</td>
+                    <td className="py-2.5 px-3 text-center">
+                      <span className="font-bold text-slate-800">N: {emp.kuotaN} Hr</span>
+                      <br />
+                      <span className="text-[11px] text-slate-500">N-1: {emp.kuotaN1 || 0} Hr</span>
+                    </td>
+                    <td className="py-2.5 px-3 text-center">
+                      <button
+                        onClick={() => handleEditQuota(emp)}
+                        className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] inline-flex items-center gap-1 shadow-sm"
+                        title="Edit Kuota Cuti N & N-1"
+                      >
+                        <i className="fa-solid fa-pen-to-square"></i> Edit Kuota
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
