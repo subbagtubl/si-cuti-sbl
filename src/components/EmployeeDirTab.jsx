@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import * as XLSX from "xlsx";
 
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5wOKDuV7tz6-zpUSAukQ6PPcON7q4ivZpSHcZoRb-MKFAAowsm9k0sTQRb6ToTCdf/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxzT57Sm5x_vFPz7UxmqUbkJ4Ag6DuL2PHota4n2tLN8BviZY2G5SWIsCEK_tif-GT9/exec";
 
 export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
   const [search, setSearch] = useState("");
