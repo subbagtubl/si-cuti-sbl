@@ -68,15 +68,24 @@ export default function App() {
     fetchDataFromDrive();
   }, []);
 
-  const handleAddLeave = async (newLeave) => {
-    const updatedLeaves = [newLeave, ...leaves];
-    setLeaves(updatedLeaves);
-    saveAppData(employees, updatedLeaves);
-
-    await syncToGoogleAppsScript("submitLeave", newLeave);
-    await syncToGoogleAppsScript("saveLeaves", updatedLeaves);
-    setActiveTab("riwayat");
+const handleAddLeave = async (newLeave) => {
+  // Ambil data pangkat & masa kerja dari master pegawai jika belum terisi di form
+  const emp = employees.find((e) => String(e.nik).trim() === String(newLeave.nik).trim()) || {};
+  
+  const enrichedLeave = {
+    ...newLeave,
+    pangkat: newLeave.pangkat || emp.pangkat || "",
+    masaKerja: newLeave.masaKerja || emp.masaKerja || ""
   };
+
+  const updatedLeaves = [enrichedLeave, ...leaves];
+  setLeaves(updatedLeaves);
+  saveAppData(employees, updatedLeaves);
+
+  await syncToGoogleAppsScript("submitLeave", enrichedLeave);
+  await syncToGoogleAppsScript("saveLeaves", updatedLeaves);
+  setActiveTab("riwayat");
+};
 
   const handleProcessApproval = async (leaveId, stage, decision, note) => {
     const updatedLeaves = [...leaves];
