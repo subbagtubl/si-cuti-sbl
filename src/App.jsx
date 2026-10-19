@@ -19,12 +19,15 @@ export default function App() {
   const [printItem, setPrintItem] = useState(null);
 
   useEffect(() => {
+    // 1. Muat data awal dari LocalStorage browser
     const { employees: initEmp, leaves: initLeaves } = loadInitialData();
     setEmployees(initEmp);
     setLeaves(initLeaves);
 
+    // 2. Tarik dan Sinkronkan Data dari Google Spreadsheet Drive
     const fetchDataFromDrive = async () => {
       try {
+        // Ambil Data Pegawai
         const empRes = await fetch(APPS_SCRIPT_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -32,6 +35,7 @@ export default function App() {
         });
         const empResult = await empRes.json();
 
+        // Ambil Data Riwayat Cuti dari Drive
         const leaveRes = await fetch(APPS_SCRIPT_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -48,14 +52,22 @@ export default function App() {
         }
 
         if (leaveResult.status === "success" && leaveResult.data && leaveResult.data.length > 0) {
+          // Jika Spreadsheet di Drive sudah terisi data, gunakan data dari Drive
           updatedLeaves = leaveResult.data;
           setLeaves(updatedLeaves);
+        } else if (initLeaves && initLeaves.length > 0) {
+          // OTOMATIS SINKRONISASI: Jika Spreadsheet di Drive masih kosong, unggah data dari LocalStorage ke Drive
+          await fetch(APPS_SCRIPT_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "saveLeaves", data: initLeaves }),
+          });
+          console.log("Data riwayat cuti dari LocalStorage berhasil disinkronkan ke Google Spreadsheet!");
         }
 
         saveAppData(updatedEmp, updatedLeaves);
-        console.log("Data Pegawai & Riwayat Cuti berhasil di-sync dari Google Spreadsheet!");
       } catch (error) {
-        console.error("Gagal mengambil data dari Google Drive:", error);
+        console.error("Gagal melakukan sinkronisasi dengan Google Drive:", error);
       }
     };
 
