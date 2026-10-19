@@ -41,6 +41,51 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
     setEditingEmp(null);
   };
 
+  // Fungsi Export / Unduh Template Excel
+  const downloadTemplate = () => {
+    const exportData =
+      employees && employees.length > 0
+        ? employees.map((emp) => ({
+            "NO": emp.no,
+            "NAMA": emp.nama,
+            "NIP": emp.nip,
+            "NIK/USERNAME": emp.nik,
+            "PANGKAT/ GOLONGAN": emp.pangkat,
+            "JABATAN": emp.jabatan,
+            "NO. HANDPHONE": emp.hp || "",
+            "EMAIL": emp.email,
+            "STATUS KEPEGAWAIAN": emp.status,
+            "MASA KERJA": emp.masaKerja,
+            "PASSWORD": emp.password || "",
+            "CUTI N": emp.kuotaN,
+            "CUTI N-1": emp.kuotaN1 || 0,
+            "CUTI N-2": emp.kuotaN2 || 0,
+          }))
+        : [
+            {
+              "NO": 1,
+              "NAMA": "Contoh Nama Pegawai",
+              "NIP": "199001012020011001",
+              "NIK/USERNAME": "6371050101900001",
+              "PANGKAT/ GOLONGAN": "Penata Muda / III/a",
+              "JABATAN": "Pengolah Data",
+              "NO. HANDPHONE": "081234567890",
+              "EMAIL": "contoh@kemensos.go.id",
+              "STATUS KEPEGAWAIAN": "PNS SENTRA",
+              "MASA KERJA": "5 Tahun 0 Bulan",
+              "PASSWORD": "123",
+              "CUTI N": 12,
+              "CUTI N-1": 6,
+              "CUTI N-2": 0,
+            },
+          ];
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Data Pegawai");
+    XLSX.writeFile(workbook, "Data_Pegawai_Sentra_Budi_Luhur.xlsx");
+  };
+
   const importExcelFile = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -113,15 +158,25 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
             </p>
           </div>
 
-          <label className="cursor-pointer px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors">
-            <i className="fa-solid fa-file-import"></i> Import / Perbarui Data Pegawai (.xlsx)
-            <input
-              type="file"
-              accept=".xlsx,.xls"
-              onChange={importExcelFile}
-              className="hidden"
-            />
-          </label>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={downloadTemplate}
+              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors"
+            >
+              <i className="fa-solid fa-file-excel"></i> Unduh Template / Export (.xlsx)
+            </button>
+
+            <label className="cursor-pointer px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors">
+              <i className="fa-solid fa-file-import"></i> Import / Perbarui Data Pegawai (.xlsx)
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={importExcelFile}
+                className="hidden"
+              />
+            </label>
+          </div>
         </div>
 
         <div className="p-4 bg-white border-b border-slate-200 flex flex-wrap gap-3 items-center justify-between">
