@@ -24,13 +24,59 @@ export default function BknPrintModal({ item, employees, onClose }) {
   const checkDec = (currentVal, targetVal) => (currentVal === targetVal ? "✓" : "");
 
   const renderFormDocument = () => (
-    <div>
-      <div style={{ fontSize: "8.5pt", textAlign: "right", marginBottom: "6px", fontWeight: "bold" }}>
+    <div className="bkn-document-root" style={{ width: "100%", fontFamily: "Arial, sans-serif", fontSize: "8pt", color: "#000", lineHeight: "1.15" }}>
+      {/* CSS Khusus Mode Cetak A4 1 Halaman */}
+      <style>{`
+        @page {
+          size: A4 portrait;
+          margin: 8mm 10mm;
+        }
+        @media print {
+          body * {
+            visibility: hidden !important;
+          }
+          #bkn-print-area, #bkn-print-area * {
+            visibility: visible !important;
+          }
+          #bkn-print-area {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+          }
+          .bkn-table {
+            border-collapse: collapse !important;
+            width: 100% !important;
+            margin-bottom: 4px !important;
+            page-break-inside: avoid !important;
+          }
+          .bkn-table td, .bkn-table th {
+            border: 1px solid #000 !important;
+            padding: 2px 4px !important;
+            font-size: 7.5pt !important;
+          }
+        }
+        .bkn-table {
+          border-collapse: collapse;
+          width: 100%;
+          margin-bottom: 5px;
+        }
+        .bkn-table td, .bkn-table th {
+          border: 1px solid #000;
+          padding: 2px 4px;
+          font-size: 8pt;
+        }
+      `}</style>
+
+      <div style={{ fontSize: "7pt", textAlign: "right", marginBottom: "4px", fontWeight: "bold" }}>
         {lampiranTitle}
       </div>
 
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px" }}>
-        <div style={{ width: "52%", fontSize: "10.5pt" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "6px" }}>
+        <div style={{ width: "50%", fontSize: "8.5pt" }}>
           Banjarbaru, {formatDateIndo(item.tglPengajuan)}
           <br />
           Kepada
@@ -42,25 +88,10 @@ export default function BknPrintModal({ item, employees, onClose }) {
         </div>
       </div>
 
-      <div
-        style={{
-          textAlign: "center",
-          fontWeight: "bold",
-          fontSize: "11.5pt",
-          marginBottom: "2px",
-          textDecoration: "underline"
-        }}
-      >
+      <div style={{ textAlign: "center", fontWeight: "bold", fontSize: "9.5pt", marginBottom: "1px", textDecoration: "underline" }}>
         FORMULIR PERMINTAAN DAN PEMBERIAN CUTI
       </div>
-      <div
-        style={{
-          textAlign: "center",
-          fontSize: "10.5pt",
-          fontWeight: "bold",
-          marginBottom: "8px"
-        }}
-      >
+      <div style={{ textAlign: "center", fontSize: "8.5pt", fontWeight: "bold", marginBottom: "5px" }}>
         Nomor : {item.noSurat}
       </div>
 
@@ -68,7 +99,7 @@ export default function BknPrintModal({ item, employees, onClose }) {
       <table className="bkn-table">
         <tbody>
           <tr>
-            <td colSpan={4} style={{ fontWeight: "bold" }}>
+            <td colSpan={4} style={{ fontWeight: "bold", backgroundColor: "#f8fafc" }}>
               I. DATA PEGAWAI
             </td>
           </tr>
@@ -99,7 +130,7 @@ export default function BknPrintModal({ item, employees, onClose }) {
       <table className="bkn-table">
         <tbody>
           <tr>
-            <td colSpan={4} style={{ fontWeight: "bold" }}>
+            <td colSpan={4} style={{ fontWeight: "bold", backgroundColor: "#f8fafc" }}>
               II. JENIS CUTI YANG DIAMBIL **
             </td>
           </tr>
@@ -138,10 +169,10 @@ export default function BknPrintModal({ item, employees, onClose }) {
       <table className="bkn-table">
         <tbody>
           <tr>
-            <td style={{ fontWeight: "bold" }}>III. ALASAN CUTI</td>
+            <td style={{ fontWeight: "bold", backgroundColor: "#f8fafc" }}>III. ALASAN CUTI</td>
           </tr>
           <tr>
-            <td style={{ minHeight: "28px" }}>
+            <td>
               {item.alasan} (Pelimpahan Tugas: {item.pengganti})
             </td>
           </tr>
@@ -152,7 +183,7 @@ export default function BknPrintModal({ item, employees, onClose }) {
       <table className="bkn-table">
         <tbody>
           <tr>
-            <td colSpan={6} style={{ fontWeight: "bold" }}>
+            <td colSpan={6} style={{ fontWeight: "bold", backgroundColor: "#f8fafc" }}>
               IV. LAMANYA CUTI
             </td>
           </tr>
@@ -175,7 +206,7 @@ export default function BknPrintModal({ item, employees, onClose }) {
       <table className="bkn-table">
         <tbody>
           <tr>
-            <td colSpan={5} style={{ fontWeight: "bold" }}>
+            <td colSpan={5} style={{ fontWeight: "bold", backgroundColor: "#f8fafc" }}>
               V. CATATAN CUTI ***
             </td>
           </tr>
@@ -223,7 +254,7 @@ export default function BknPrintModal({ item, employees, onClose }) {
       <table className="bkn-table">
         <tbody>
           <tr>
-            <td colSpan={3} style={{ fontWeight: "bold" }}>
+            <td colSpan={3} style={{ fontWeight: "bold", backgroundColor: "#f8fafc" }}>
               VI. ALAMAT SELAMA MENJALANKAN CUTI
             </td>
           </tr>
@@ -235,7 +266,7 @@ export default function BknPrintModal({ item, employees, onClose }) {
             <td style={{ width: "33%", fontWeight: "bold" }}>{item.telp}</td>
           </tr>
           <tr>
-            <td colSpan={2} style={{ textAlign: "center", paddingTop: "6px" }}>
+            <td colSpan={2} style={{ textAlign: "center", paddingTop: "4px" }}>
               Hormat saya,
               <br />
               <br />
@@ -254,7 +285,7 @@ export default function BknPrintModal({ item, employees, onClose }) {
       <table className="bkn-table">
         <tbody>
           <tr>
-            <td colSpan={4} style={{ fontWeight: "bold" }}>
+            <td colSpan={4} style={{ fontWeight: "bold", backgroundColor: "#f8fafc" }}>
               VII. PERTIMBANGAN ATASAN LANGSUNG **
             </td>
           </tr>
@@ -264,19 +295,19 @@ export default function BknPrintModal({ item, employees, onClose }) {
             <td style={{ width: "25%" }}>DITANGGUHKAN ****</td>
             <td style={{ width: "30%" }}>TIDAK DISETUJUI ****</td>
           </tr>
-          <tr style={{ textAlign: "center", height: "22px", fontWeight: "bold" }}>
+          <tr style={{ textAlign: "center", height: "18px", fontWeight: "bold" }}>
             <td>{checkDec(item.statusAtasan, "Disetujui")}</td>
             <td>{checkDec(item.statusAtasan, "Perubahan")}</td>
             <td>{checkDec(item.statusAtasan, "Ditangguhkan")}</td>
             <td>{checkDec(item.statusAtasan, "Tidak Disetujui")}</td>
           </tr>
           <tr>
-            <td colSpan={3} style={{ fontSize: "9.5pt" }}>
+            <td colSpan={3} style={{ fontSize: "7.5pt" }}>
               <strong>Catatan Pertimbangan:</strong>
               <br />
               {item.catatanAtasan || "-"}
             </td>
-            <td style={{ textAlign: "center", paddingTop: "6px" }}>
+            <td style={{ textAlign: "center", paddingTop: "4px" }}>
               Kepala Sub Bagian Tata Usaha,
               <br />
               <br />
@@ -295,7 +326,7 @@ export default function BknPrintModal({ item, employees, onClose }) {
       <table className="bkn-table">
         <tbody>
           <tr>
-            <td colSpan={4} style={{ fontWeight: "bold" }}>
+            <td colSpan={4} style={{ fontWeight: "bold", backgroundColor: "#f8fafc" }}>
               VIII. KEPUTUSAN PEJABAT YANG BERWENANG MEMBERIKAN CUTI **
             </td>
           </tr>
@@ -305,19 +336,19 @@ export default function BknPrintModal({ item, employees, onClose }) {
             <td style={{ width: "25%" }}>DITANGGUHKAN ****</td>
             <td style={{ width: "30%" }}>TIDAK DISETUJUI ****</td>
           </tr>
-          <tr style={{ textAlign: "center", height: "22px", fontWeight: "bold" }}>
+          <tr style={{ textAlign: "center", height: "18px", fontWeight: "bold" }}>
             <td>{checkDec(item.statusPejabat, "Disetujui")}</td>
             <td>{checkDec(item.statusPejabat, "Perubahan")}</td>
             <td>{checkDec(item.statusPejabat, "Ditangguhkan")}</td>
             <td>{checkDec(item.statusPejabat, "Tidak Disetujui")}</td>
           </tr>
           <tr>
-            <td colSpan={3} style={{ fontSize: "9.5pt" }}>
+            <td colSpan={3} style={{ fontSize: "7.5pt" }}>
               <strong>Catatan Keputusan Pejabat Berwenang:</strong>
               <br />
               {item.catatanPejabat || "-"}
             </td>
-            <td style={{ textAlign: "center", paddingTop: "6px" }}>
+            <td style={{ textAlign: "center", paddingTop: "4px" }}>
               Kepala Sentra Budi Luhur di Banjarbaru,
               <br />
               <br />
@@ -364,7 +395,7 @@ export default function BknPrintModal({ item, employees, onClose }) {
           </div>
 
           <div className="p-6 sm:p-10 bg-slate-100 overflow-x-auto">
-            <div className="bg-white mx-auto p-8 shadow border border-slate-300 max-w-[210mm] text-black">
+            <div className="bg-white mx-auto p-6 shadow border border-slate-300 max-w-[210mm] text-black">
               {renderFormDocument()}
             </div>
           </div>
