@@ -41,7 +41,7 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
     setEditingEmp(null);
   };
 
-  // Fungsi Export / Unduh Template Excel
+  // Fungsi Export / Unduh Template Excel (Tanpa Kolom Password)
   const downloadTemplate = () => {
     const exportData =
       employees && employees.length > 0
@@ -56,7 +56,6 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
             "EMAIL": emp.email,
             "STATUS KEPEGAWAIAN": emp.status,
             "MASA KERJA": emp.masaKerja,
-            "PASSWORD": emp.password || "",
             "CUTI N": emp.kuotaN,
             "CUTI N-1": emp.kuotaN1 || 0,
             "CUTI N-2": emp.kuotaN2 || 0,
@@ -73,7 +72,6 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
               "EMAIL": "contoh@kemensos.go.id",
               "STATUS KEPEGAWAIAN": "PNS SENTRA",
               "MASA KERJA": "5 Tahun 0 Bulan",
-              "PASSWORD": "123",
               "CUTI N": 12,
               "CUTI N-1": 6,
               "CUTI N-2": 0,
