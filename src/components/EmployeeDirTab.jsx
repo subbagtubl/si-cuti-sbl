@@ -5,25 +5,40 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
-  const handleEditQuota = (emp) => {
-    const newN = prompt(`Masukkan jumlah kuota Cuti Tahunan (N) untuk ${emp.nama}:`, emp.kuotaN);
-    if (newN === null) return;
-    const newN1 = prompt(`Masukkan sisa kuota N-1 untuk ${emp.nama}:`, emp.kuotaN1 || 0);
-    if (newN1 === null) return;
-    const newN2 = prompt(`Masukkan sisa kuota N-2 untuk ${emp.nama}:`, emp.kuotaN2 || 0);
-    if (newN2 === null) return;
+  // State untuk kontrol Modal Edit Kuota
+  const [editingEmp, setEditingEmp] = useState(null);
+  const [quotaForm, setQuotaForm] = useState({
+    kuotaN: 0,
+    kuotaN1: 0,
+    kuotaN2: 0,
+  });
 
-    const updated = employees.map((item) => 
-      item.nik === emp.nik 
-        ? { 
-            ...item, 
-            kuotaN: parseInt(newN, 10) || 0, 
-            kuotaN1: parseInt(newN1, 10) || 0,
-            kuotaN2: parseInt(newN2, 10) || 0
-          } 
+  const handleOpenEditQuota = (emp) => {
+    setEditingEmp(emp);
+    setQuotaForm({
+      kuotaN: emp.kuotaN || 0,
+      kuotaN1: emp.kuotaN1 || 0,
+      kuotaN2: emp.kuotaN2 || 0,
+    });
+  };
+
+  const handleSaveQuota = (e) => {
+    e.preventDefault();
+    if (!editingEmp) return;
+
+    const updated = employees.map((item) =>
+      item.nik === editingEmp.nik
+        ? {
+            ...item,
+            kuotaN: parseInt(quotaForm.kuotaN, 10) || 0,
+            kuotaN1: parseInt(quotaForm.kuotaN1, 10) || 0,
+            kuotaN2: parseInt(quotaForm.kuotaN2, 10) || 0,
+          }
         : item
     );
+
     onUpdateEmployees(updated);
+    setEditingEmp(null);
   };
 
   const importExcelFile = (event) => {
@@ -98,7 +113,7 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
             </p>
           </div>
 
-          <label className="cursor-pointer px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm">
+          <label className="cursor-pointer px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-colors">
             <i className="fa-solid fa-file-import"></i> Import / Perbarui Data Pegawai (.xlsx)
             <input
               type="file"
@@ -185,8 +200,8 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
                     </td>
                     <td className="py-2.5 px-3 text-center">
                       <button
-                        onClick={() => handleEditQuota(emp)}
-                        className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] inline-flex items-center gap-1 shadow-sm"
+                        onClick={() => handleOpenEditQuota(emp)}
+                        className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] inline-flex items-center gap-1 shadow-sm transition-colors"
                         title="Edit Kuota Cuti N, N-1 & N-2"
                       >
                         <i className="fa-solid fa-pen-to-square"></i> Edit Kuota
@@ -199,6 +214,112 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
           </table>
         </div>
       </div>
+
+      {/* Modern Pop-Up Modal Edit Kuota */}
+      {editingEmp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden transform transition-all">
+            {/* Modal Header */}
+            <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold">
+                  <i className="fa-solid fa-pen-to-square text-base"></i>
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-800 text-sm">Edit Kuota Cuti</h4>
+                  <p className="text-xs text-slate-500 font-medium">{editingEmp.nama}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingEmp(null)}
+                className="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg hover:bg-slate-200/60 flex items-center justify-center transition-colors"
+              >
+                <i className="fa-solid fa-xmark text-sm"></i>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleSaveQuota}>
+              <div className="p-6 space-y-4">
+                <div className="bg-amber-50 border border-amber-200/70 rounded-xl p-3 text-xs text-amber-900 flex items-start gap-2.5">
+                  <i className="fa-solid fa-circle-info text-amber-600 text-sm mt-0.5"></i>
+                  <div>
+                    Sesuaikan sisa alokasi kuota cuti tahun berjalan (<strong>N</strong>) serta sisa tahun sebelumnya (<strong>N-1</strong> & <strong>N-2</strong>).
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
+                      Cuti N (Hari)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={quotaForm.kuotaN}
+                      onChange={(e) =>
+                        setQuotaForm({ ...quotaForm, kuotaN: e.target.value })
+                      }
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
+                      Cuti N-1 (Hari)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={quotaForm.kuotaN1}
+                      onChange={(e) =>
+                        setQuotaForm({ ...quotaForm, kuotaN1: e.target.value })
+                      }
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
+                      Cuti N-2 (Hari)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={quotaForm.kuotaN2}
+                      onChange={(e) =>
+                        setQuotaForm({ ...quotaForm, kuotaN2: e.target.value })
+                      }
+                      className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setEditingEmp(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200/70 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition-colors"
+                >
+                  <i className="fa-solid fa-check"></i> Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
