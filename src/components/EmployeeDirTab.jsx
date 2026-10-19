@@ -10,10 +10,17 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
     if (newN === null) return;
     const newN1 = prompt(`Masukkan sisa kuota N-1 untuk ${emp.nama}:`, emp.kuotaN1 || 0);
     if (newN1 === null) return;
+    const newN2 = prompt(`Masukkan sisa kuota N-2 untuk ${emp.nama}:`, emp.kuotaN2 || 0);
+    if (newN2 === null) return;
 
     const updated = employees.map((item) => 
       item.nik === emp.nik 
-        ? { ...item, kuotaN: parseInt(newN, 10) || 0, kuotaN1: parseInt(newN1, 10) || 0 } 
+        ? { 
+            ...item, 
+            kuotaN: parseInt(newN, 10) || 0, 
+            kuotaN1: parseInt(newN1, 10) || 0,
+            kuotaN2: parseInt(newN2, 10) || 0
+          } 
         : item
     );
     onUpdateEmployees(updated);
@@ -54,10 +61,9 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
             masaKerjaTahun: yrs,
             password: String(r["PASSWORD"] || "").trim(),
             role,
-            kuotaN: 12,
-            kuotaN1:
-              String(r["STATUS KEPEGAWAIAN"]).includes("PNS") && yrs >= 2 ? 6 : 0,
-            kuotaN2: 0
+            kuotaN: parseInt(r["CUTI N"] || r["N"] || 12, 10),
+            kuotaN1: parseInt(r["CUTI N-1"] || r["N-1"] || (String(r["STATUS KEPEGAWAIAN"]).includes("PNS") && yrs >= 2 ? 6 : 0), 10),
+            kuotaN2: parseInt(r["CUTI N-2"] || r["N-2"] || 0, 10)
           };
         });
 
@@ -138,7 +144,7 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
                 <th className="py-3 px-3">Jabatan</th>
                 <th className="py-3 px-3">Status</th>
                 <th className="py-3 px-3">Masa Kerja</th>
-                <th className="py-3 px-3 text-center">Sisa Cuti (N & N-1)</th>
+                <th className="py-3 px-3 text-center">Sisa Cuti (N, N-1, N-2)</th>
                 <th className="py-3 px-3 text-center">Aksi</th>
               </tr>
             </thead>
@@ -170,12 +176,18 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
                       <span className="font-bold text-slate-800">N: {emp.kuotaN} Hr</span>
                       <br />
                       <span className="text-[11px] text-slate-500">N-1: {emp.kuotaN1 || 0} Hr</span>
+                      {emp.kuotaN2 > 0 && (
+                        <>
+                          <br />
+                          <span className="text-[11px] text-slate-400">N-2: {emp.kuotaN2} Hr</span>
+                        </>
+                      )}
                     </td>
                     <td className="py-2.5 px-3 text-center">
                       <button
                         onClick={() => handleEditQuota(emp)}
                         className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] inline-flex items-center gap-1 shadow-sm"
-                        title="Edit Kuota Cuti N & N-1"
+                        title="Edit Kuota Cuti N, N-1 & N-2"
                       >
                         <i className="fa-solid fa-pen-to-square"></i> Edit Kuota
                       </button>
