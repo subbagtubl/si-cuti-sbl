@@ -4,13 +4,11 @@ import { formatDateIndo } from "../utils/dateHelper";
 export default function BknPrintModal({ item, employees, onClose }) {
   if (!item) return null;
 
-  // Cari data master pegawai berdasarkan NIK atau NIP
   const emp = employees.find(
     (e) => String(e.nik).trim() === String(item.nik).trim() || 
            String(e.nip).trim() === String(item.nip).trim()
   ) || {};
 
-  // Prioritaskan data dari item, jika kosong ambil dari master data pegawai (emp)
   const pangkat = item.pangkat || emp.pangkat || "";
   const masaKerja = item.masaKerja || emp.masaKerja || "-";
 
@@ -24,12 +22,11 @@ export default function BknPrintModal({ item, employees, onClose }) {
   const checkDec = (currentVal, targetVal) => (currentVal === targetVal ? "✓" : "");
 
   const renderFormDocument = () => (
-    <div className="bkn-document-root" style={{ width: "100%", fontFamily: "Arial, sans-serif", fontSize: "8pt", color: "#000", lineHeight: "1.15" }}>
-      {/* CSS Khusus Mode Cetak A4 1 Halaman */}
+    <div style={{ width: "100%", fontFamily: "Arial, sans-serif", fontSize: "7pt", color: "#000", lineHeight: "1.1" }}>
       <style>{`
         @page {
           size: A4 portrait;
-          margin: 8mm 10mm;
+          margin: 6mm 8mm;
         }
         @media print {
           body * {
@@ -50,33 +47,33 @@ export default function BknPrintModal({ item, employees, onClose }) {
           .bkn-table {
             border-collapse: collapse !important;
             width: 100% !important;
-            margin-bottom: 4px !important;
+            margin-bottom: 2px !important;
             page-break-inside: avoid !important;
           }
           .bkn-table td, .bkn-table th {
             border: 1px solid #000 !important;
-            padding: 2px 4px !important;
-            font-size: 7.5pt !important;
+            padding: 1.5px 3px !important;
+            font-size: 6.5pt !important;
           }
         }
         .bkn-table {
           border-collapse: collapse;
           width: 100%;
-          margin-bottom: 5px;
+          margin-bottom: 3px;
         }
         .bkn-table td, .bkn-table th {
           border: 1px solid #000;
-          padding: 2px 4px;
-          font-size: 8pt;
+          padding: 1.5px 3px;
+          font-size: 7pt;
         }
       `}</style>
 
-      <div style={{ fontSize: "7pt", textAlign: "right", marginBottom: "4px", fontWeight: "bold" }}>
+      <div style={{ fontSize: "6.5pt", textAlign: "right", marginBottom: "2px", fontWeight: "bold" }}>
         {lampiranTitle}
       </div>
 
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "6px" }}>
-        <div style={{ width: "50%", fontSize: "8.5pt" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "4px" }}>
+        <div style={{ width: "48%", fontSize: "7.5pt" }}>
           Banjarbaru, {formatDateIndo(item.tglPengajuan)}
           <br />
           Kepada
@@ -88,10 +85,10 @@ export default function BknPrintModal({ item, employees, onClose }) {
         </div>
       </div>
 
-      <div style={{ textAlign: "center", fontWeight: "bold", fontSize: "9.5pt", marginBottom: "1px", textDecoration: "underline" }}>
+      <div style={{ textAlign: "center", fontWeight: "bold", fontSize: "8.5pt", marginBottom: "1px", textDecoration: "underline" }}>
         FORMULIR PERMINTAAN DAN PEMBERIAN CUTI
       </div>
-      <div style={{ textAlign: "center", fontSize: "8.5pt", fontWeight: "bold", marginBottom: "5px" }}>
+      <div style={{ textAlign: "center", fontSize: "7.5pt", fontWeight: "bold", marginBottom: "3px" }}>
         Nomor : {item.noSurat}
       </div>
 
@@ -266,9 +263,8 @@ export default function BknPrintModal({ item, employees, onClose }) {
             <td style={{ width: "33%", fontWeight: "bold" }}>{item.telp}</td>
           </tr>
           <tr>
-            <td colSpan={2} style={{ textAlign: "center", paddingTop: "4px" }}>
+            <td colSpan={2} style={{ textAlign: "center", paddingTop: "2px" }}>
               Hormat saya,
-              <br />
               <br />
               <br />
               <span style={{ fontWeight: "bold", textDecoration: "underline" }}>
@@ -295,21 +291,20 @@ export default function BknPrintModal({ item, employees, onClose }) {
             <td style={{ width: "25%" }}>DITANGGUHKAN ****</td>
             <td style={{ width: "30%" }}>TIDAK DISETUJUI ****</td>
           </tr>
-          <tr style={{ textAlign: "center", height: "18px", fontWeight: "bold" }}>
+          <tr style={{ textAlign: "center", height: "14px", fontWeight: "bold" }}>
             <td>{checkDec(item.statusAtasan, "Disetujui")}</td>
             <td>{checkDec(item.statusAtasan, "Perubahan")}</td>
             <td>{checkDec(item.statusAtasan, "Ditangguhkan")}</td>
             <td>{checkDec(item.statusAtasan, "Tidak Disetujui")}</td>
           </tr>
           <tr>
-            <td colSpan={3} style={{ fontSize: "7.5pt" }}>
+            <td colSpan={3} style={{ fontSize: "6.5pt" }}>
               <strong>Catatan Pertimbangan:</strong>
               <br />
               {item.catatanAtasan || "-"}
             </td>
-            <td style={{ textAlign: "center", paddingTop: "4px" }}>
+            <td style={{ textAlign: "center", paddingTop: "2px" }}>
               Kepala Sub Bagian Tata Usaha,
-              <br />
               <br />
               <br />
               <span style={{ fontWeight: "bold", textDecoration: "underline" }}>
@@ -336,21 +331,20 @@ export default function BknPrintModal({ item, employees, onClose }) {
             <td style={{ width: "25%" }}>DITANGGUHKAN ****</td>
             <td style={{ width: "30%" }}>TIDAK DISETUJUI ****</td>
           </tr>
-          <tr style={{ textAlign: "center", height: "18px", fontWeight: "bold" }}>
+          <tr style={{ textAlign: "center", height: "14px", fontWeight: "bold" }}>
             <td>{checkDec(item.statusPejabat, "Disetujui")}</td>
             <td>{checkDec(item.statusPejabat, "Perubahan")}</td>
             <td>{checkDec(item.statusPejabat, "Ditangguhkan")}</td>
             <td>{checkDec(item.statusPejabat, "Tidak Disetujui")}</td>
           </tr>
           <tr>
-            <td colSpan={3} style={{ fontSize: "7.5pt" }}>
+            <td colSpan={3} style={{ fontSize: "6.5pt" }}>
               <strong>Catatan Keputusan Pejabat Berwenang:</strong>
               <br />
               {item.catatanPejabat || "-"}
             </td>
-            <td style={{ textAlign: "center", paddingTop: "4px" }}>
+            <td style={{ textAlign: "center", paddingTop: "2px" }}>
               Kepala Sentra Budi Luhur di Banjarbaru,
-              <br />
               <br />
               <br />
               <span style={{ fontWeight: "bold", textDecoration: "underline" }}>
