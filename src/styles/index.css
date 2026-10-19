@@ -1,0 +1,45 @@
+/* Pengaturan Khusus Cetak Formulir Resmi BKN (F4/A4 Portrait) */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #bkn-print-area,
+  #bkn-print-area * {
+    visibility: visible;
+  }
+  #bkn-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: white;
+    color: black;
+    font-family: "Times New Roman", Times, serif !important;
+    font-size: 11pt;
+    line-height: 1.25;
+  }
+  .no-print {
+    display: none !important;
+  }
+  @page {
+    size: 210mm 330mm; /* F4 / Folio Standar Tata Naskah Dinas */
+    margin: 10mm 14mm 10mm 14mm;
+  }
+}
+
+.bkn-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 6px;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 10.5pt;
+}
+
+.bkn-table th,
+.bkn-table td {
+  border: 1px solid #000;
+  padding: 3px 6px;
+  vertical-align: top;
+}
