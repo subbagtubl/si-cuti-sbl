@@ -10,4 +10,4 @@ export const EMP_STORAGE_KEY = "sbl_prod_employees_2026";
 export const LEAVE_STORAGE_KEY = "sbl_prod_leaves_2026";
 
 // Ganti dengan URL Web App Google Apps Script setelah di-deploy jika ingin sinkron ke GDrive/GSheets
-export const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz7tZIeaQFvWtHKKPbKy7Nnf5H7YMot3o3AB4EOHC_-tcLlu3RxsEwZAMbQijd93dKA/exec";
+export const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxsmZ-ae-86K3F2GseO1Rc4Ti9pN89WsaXUV-7tXMJ845ziZtVvj9ckMxatw5MEgVY/exec";

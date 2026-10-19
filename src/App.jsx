@@ -8,10 +8,9 @@ import HistoryTab from "./components/HistoryTab";
 import ApprovalTab from "./components/ApprovalTab";
 import EmployeeDirTab from "./components/EmployeeDirTab";
 import BknPrintModal from "./components/BknPrintModal";
-import PasswordModal from "./components/PasswordModal";
 
 // URL Web App Google Apps Script Sentra Budi Luhur
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz7tZIeaQFvWtHKKPbKy7Nnf5H7YMot3o3AB4EOHC_-tcLlu3RxsEwZAMbQijd93dKA/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxsmZ-ae-86K3F2GseO1Rc4Ti9pN89WsaXUV-7tXMJ845ziZtVvj9ckMxatw5MEgVY/exec";
 
 export default function App() {
   const [employees, setEmployees] = useState([]);
@@ -19,7 +18,6 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [printItem, setPrintItem] = useState(null);
-  const [isPassModalOpen, setIsPassModalOpen] = useState(false);
 
   // Load data awal dari LocalStorage & Sinkronkan dari Google Spreadsheet Drive
   useEffect(() => {
@@ -41,7 +39,7 @@ export default function App() {
         if (result.status === "success" && result.data && result.data.length > 0) {
           setEmployees(result.data);
           saveAppData(result.data, initLeaves);
-          console.log("Data Pegawai & Password berhasil di-sync dari Google Spreadsheet Drive!");
+          console.log("Data Pegawai berhasil di-sync dari Google Spreadsheet!");
         }
       } catch (error) {
         console.error("Gagal mengambil data dari Google Drive:", error);
@@ -104,19 +102,6 @@ export default function App() {
     syncToGoogleAppsScript("saveEmployees", newEmpList);
   };
 
-  const handleSavePassword = async (newPassword) => {
-    const updatedEmployees = employees.map((emp) =>
-      emp.nik === currentUser.nik ? { ...emp, password: newPassword } : emp
-    );
-    setEmployees(updatedEmployees);
-    setCurrentUser({ ...currentUser, password: newPassword });
-    saveAppData(updatedEmployees, leaves);
-    
-    // Simpan perubahan password ke Google Spreadsheet
-    await syncToGoogleAppsScript("saveEmployees", updatedEmployees);
-    alert("Password Anda berhasil diperbarui dan tersimpan di Google Drive.");
-  };
-
   if (!currentUser) {
     return (
       <LoginScreen
@@ -147,7 +132,6 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         pendingCount={pendingCount}
-        onOpenPasswordModal={() => setIsPassModalOpen(true)}
         onLogout={() => setCurrentUser(null)}
       />
 
@@ -194,13 +178,6 @@ export default function App() {
         item={printItem}
         employees={employees}
         onClose={() => setPrintItem(null)}
-      />
-
-      <PasswordModal
-        isOpen={isPassModalOpen}
-        currentUser={syncedCurrentUser}
-        onClose={() => setIsPassModalOpen(false)}
-        onSavePassword={handleSavePassword}
       />
     </div>
   );

@@ -5,7 +5,6 @@ export default function Navbar({
   activeTab,
   setActiveTab,
   pendingCount,
-  onOpenPasswordModal,
   onLogout
 }) {
   const isPimpinan =
@@ -46,13 +45,6 @@ export default function Navbar({
               {currentUser.jabatan} • {currentUser.status}
             </div>
           </div>
-          <button
-            onClick={onOpenPasswordModal}
-            className="p-2 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition flex items-center gap-1.5"
-          >
-            <i className="fa-solid fa-key"></i>
-            <span className="hidden sm:inline">Ubah Password</span>
-          </button>
           <button
             onClick={onLogout}
             className="p-2 px-3 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition flex items-center gap-1.5"
