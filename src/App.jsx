@@ -9,8 +9,7 @@ import ApprovalTab from "./components/ApprovalTab";
 import EmployeeDirTab from "./components/EmployeeDirTab";
 import BknPrintModal from "./components/BknPrintModal";
 
-// URL Web App Google Apps Script Sentra Budi Luhur
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxsmZ-ae-86K3F2GseO1Rc4Ti9pN89WsaXUV-7tXMJ845ziZtVvj9ckMxatw5MEgVY/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFGalF4Xhmo8hDEOZjhPiNjNxcmNwCVxEDUF4wF0kHC65qbkFSwTKv1oYs08Y79J2z/exec";
 
 export default function App() {
   const [employees, setEmployees] = useState([]);
@@ -19,45 +18,61 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [printItem, setPrintItem] = useState(null);
 
-  // Load data awal dari LocalStorage & Sinkronkan dari Google Spreadsheet Drive
   useEffect(() => {
-    // 1. Muat data awal dari LocalStorage agar aplikasi cepat terbuka
     const { employees: initEmp, leaves: initLeaves } = loadInitialData();
     setEmployees(initEmp);
     setLeaves(initLeaves);
 
-    // 2. Tarik data pegawai & password terbaru secara otomatis dari Google Spreadsheet Drive
-    const fetchEmployeesFromDrive = async () => {
+    const fetchDataFromDrive = async () => {
       try {
-        const response = await fetch(APPS_SCRIPT_URL, {
+        const empRes = await fetch(APPS_SCRIPT_URL, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({ action: "getEmployees" }),
         });
-        const result = await response.json();
+        const empResult = await empRes.json();
 
-        if (result.status === "success" && result.data && result.data.length > 0) {
-          setEmployees(result.data);
-          saveAppData(result.data, initLeaves);
-          console.log("Data Pegawai berhasil di-sync dari Google Spreadsheet!");
+        const leaveRes = await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "getLeaves" }),
+        });
+        const leaveResult = await leaveRes.json();
+
+        let updatedEmp = initEmp;
+        let updatedLeaves = initLeaves;
+
+        if (empResult.status === "success" && empResult.data && empResult.data.length > 0) {
+          updatedEmp = empResult.data;
+          setEmployees(updatedEmp);
         }
+
+        if (leaveResult.status === "success" && leaveResult.data && leaveResult.data.length > 0) {
+          updatedLeaves = leaveResult.data;
+          setLeaves(updatedLeaves);
+        }
+
+        saveAppData(updatedEmp, updatedLeaves);
+        console.log("Data Pegawai & Riwayat Cuti berhasil di-sync dari Google Spreadsheet!");
       } catch (error) {
         console.error("Gagal mengambil data dari Google Drive:", error);
       }
     };
 
-    fetchEmployeesFromDrive();
+    fetchDataFromDrive();
   }, []);
 
-  const handleAddLeave = (newLeave) => {
+  const handleAddLeave = async (newLeave) => {
     const updatedLeaves = [newLeave, ...leaves];
     setLeaves(updatedLeaves);
     saveAppData(employees, updatedLeaves);
-    syncToGoogleAppsScript("submitLeave", newLeave);
+
+    await syncToGoogleAppsScript("submitLeave", newLeave);
+    await syncToGoogleAppsScript("saveLeaves", updatedLeaves);
     setActiveTab("riwayat");
   };
 
-  const handleProcessApproval = (leaveId, stage, decision, note) => {
+  const handleProcessApproval = async (leaveId, stage, decision, note) => {
     const updatedLeaves = [...leaves];
     const updatedEmployees = [...employees];
     const idx = updatedLeaves.findIndex((l) => l.id === leaveId);
@@ -93,7 +108,9 @@ export default function App() {
     setLeaves(updatedLeaves);
     setEmployees(updatedEmployees);
     saveAppData(updatedEmployees, updatedLeaves);
-    syncToGoogleAppsScript("saveEmployees", updatedEmployees);
+
+    await syncToGoogleAppsScript("saveEmployees", updatedEmployees);
+    await syncToGoogleAppsScript("saveLeaves", updatedLeaves);
   };
 
   const handleUpdateEmployees = (newEmpList) => {
