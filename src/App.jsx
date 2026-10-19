@@ -9,7 +9,7 @@ import ApprovalTab from "./components/ApprovalTab";
 import EmployeeDirTab from "./components/EmployeeDirTab";
 import BknPrintModal from "./components/BknPrintModal";
 
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFGalF4Xhmo8hDEOZjhPiNjNxcmNwCVxEDUF4wF0kHC65qbkFSwTKv1oYs08Y79J2z/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5wOKDuV7tz6-zpUSAukQ6PPcON7q4ivZpSHcZoRb-MKFAAowsm9k0sTQRb6ToTCdf/exec";
 
 export default function App() {
   const [employees, setEmployees] = useState([]);
@@ -19,12 +19,12 @@ export default function App() {
   const [printItem, setPrintItem] = useState(null);
 
   useEffect(() => {
-    // 1. Muat data awal dari LocalStorage browser
+    // 1. Muat data awal dari LocalStorage sebagai penampung sementara
     const { employees: initEmp, leaves: initLeaves } = loadInitialData();
     setEmployees(initEmp);
     setLeaves(initLeaves);
 
-    // 2. Tarik dan Sinkronkan Data dari Google Spreadsheet Drive
+    // 2. Tarik Data dari Google Spreadsheet (Google Spreadsheet adalah Master Data Utama)
     const fetchDataFromDrive = async () => {
       try {
         // Ambil Data Pegawai
@@ -43,31 +43,25 @@ export default function App() {
         });
         const leaveResult = await leaveRes.json();
 
-        let updatedEmp = initEmp;
-        let updatedLeaves = initLeaves;
+        let finalEmp = initEmp;
+        let finalLeaves = initLeaves;
 
-        if (empResult.status === "success" && empResult.data && empResult.data.length > 0) {
-          updatedEmp = empResult.data;
-          setEmployees(updatedEmp);
+        // Jika Google Spreadsheet berhasil diakses, gunakan data dari Spreadsheet secara mutlak
+        if (empResult.status === "success" && Array.isArray(empResult.data)) {
+          finalEmp = empResult.data;
+          setEmployees(finalEmp);
         }
 
-        if (leaveResult.status === "success" && leaveResult.data && leaveResult.data.length > 0) {
-          // Jika Spreadsheet di Drive sudah terisi data, gunakan data dari Drive
-          updatedLeaves = leaveResult.data;
-          setLeaves(updatedLeaves);
-        } else if (initLeaves && initLeaves.length > 0) {
-          // OTOMATIS SINKRONISASI: Jika Spreadsheet di Drive masih kosong, unggah data dari LocalStorage ke Drive
-          await fetch(APPS_SCRIPT_URL, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "saveLeaves", data: initLeaves }),
-          });
-          console.log("Data riwayat cuti dari LocalStorage berhasil disinkronkan ke Google Spreadsheet!");
+        if (leaveResult.status === "success" && Array.isArray(leaveResult.data)) {
+          finalLeaves = leaveResult.data;
+          setLeaves(finalLeaves);
         }
 
-        saveAppData(updatedEmp, updatedLeaves);
+        // Sinkronkan LocalStorage browser agar sama persis dengan Google Spreadsheet
+        saveAppData(finalEmp, finalLeaves);
+        console.log("Data berhasil disinkronkan dari Google Spreadsheet!");
       } catch (error) {
-        console.error("Gagal melakukan sinkronisasi dengan Google Drive:", error);
+        console.error("Gagal melakukan sinkronisasi dengan Google Drive, menggunakan LocalStorage:", error);
       }
     };
 
