@@ -4,18 +4,23 @@ import { formatDateIndo } from "../utils/dateHelper";
 export default function BknPrintModal({ item, employees, onClose }) {
   if (!item) return null;
 
-  const emp = employees.find((e) => e.nik === item.nik) || {
-    kuotaN: 12,
-    kuotaN1: 0,
-    kuotaN2: 0
-  };
-  const isPNS = item.statusPegawai.includes("PNS");
+  // Cari data master pegawai berdasarkan NIK atau NIP
+  const emp = employees.find(
+    (e) => String(e.nik).trim() === String(item.nik).trim() || 
+           String(e.nip).trim() === String(item.nip).trim()
+  ) || {};
+
+  // Prioritaskan data dari item, jika kosong ambil dari master data pegawai (emp)
+  const pangkat = item.pangkat || emp.pangkat || "";
+  const masaKerja = item.masaKerja || emp.masaKerja || "-";
+
+  const isPNS = item.statusPegawai ? item.statusPegawai.includes("PNS") : true;
   const lampiranTitle = isPNS
     ? "ANAK LAMPIRAN 1.b PERATURAN BADAN KEPEGAWAIAN NEGARA REPUBLIK INDONESIA NOMOR 24 TAHUN 2017 JO. NOMOR 7 TAHUN 2021"
     : "LAMPIRAN PERATURAN BADAN KEPEGAWAIAN NEGARA REPUBLIK INDONESIA NOMOR 7 TAHUN 2022 (TATA CARA PEMBERIAN CUTI PPPK)";
 
   const check = (type) =>
-    item.jenisCuti.toLowerCase().includes(type.toLowerCase()) ? "✓" : "";
+    item.jenisCuti && item.jenisCuti.toLowerCase().includes(type.toLowerCase()) ? "✓" : "";
   const checkDec = (currentVal, targetVal) => (currentVal === targetVal ? "✓" : "");
 
   const renderFormDocument = () => (
@@ -76,10 +81,10 @@ export default function BknPrintModal({ item, employees, onClose }) {
           <tr>
             <td>Jabatan</td>
             <td>
-              {item.jabatan} ({item.pangkat})
+              {item.jabatan || emp.jabatan}{pangkat ? ` (${pangkat})` : ""}
             </td>
             <td>Masa Kerja</td>
-            <td>{item.masaKerja}</td>
+            <td>{masaKerja}</td>
           </tr>
           <tr>
             <td>Unit Kerja</td>
@@ -206,7 +211,7 @@ export default function BknPrintModal({ item, employees, onClose }) {
           </tr>
           <tr>
             <td style={{ textAlign: "center" }}>N (2026)</td>
-            <td style={{ textAlign: "center", fontWeight: "bold" }}>{emp.kuotaN}</td>
+            <td style={{ textAlign: "center", fontWeight: "bold" }}>{emp.kuotaN ?? 12}</td>
             <td>Hari Kerja</td>
             <td>6. CUTI DI LUAR TANGGUNGAN NEGARA</td>
             <td style={{ textAlign: "center" }}>{check("Luar Tanggungan")}</td>
@@ -366,7 +371,6 @@ export default function BknPrintModal({ item, employees, onClose }) {
         </div>
       </div>
 
-      {/* Area khusus ketika window.print() dipanggil */}
       <div id="bkn-print-area" className="hidden print:block">
         {renderFormDocument()}
       </div>
