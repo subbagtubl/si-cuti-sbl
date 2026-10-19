@@ -57,8 +57,8 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
             "STATUS KEPEGAWAIAN": emp.status,
             "MASA KERJA": emp.masaKerja,
             "CUTI N": emp.kuotaN,
-            "CUTI N-1": emp.kuotaN1 || 0,
-            "CUTI N-2": emp.kuotaN2 || 0,
+            "CUTI N-1": emp.kuotaN1 ?? 0,
+            "CUTI N-2": emp.kuotaN2 ?? 0,
           }))
         : [
             {
@@ -105,6 +105,14 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
           if (jabatan === "Kepala") role = "KEPALA_SENTRA";
           else if (jabatan === "Kepala Sub Bagian Tata Usaha") role = "KASUBBAG_TU";
 
+          // Gunakan operator ?? (Nullish Coalescing) agar angka 0 tetap diakui
+          const statusKep = String(r["STATUS KEPEGAWAIAN"] || "");
+          const defaultN1 = statusKep.includes("PNS") && yrs >= 2 ? 6 : 0;
+
+          const rawN = r["CUTI N"] ?? r["N"] ?? 12;
+          const rawN1 = r["CUTI N-1"] ?? r["N-1"] ?? defaultN1;
+          const rawN2 = r["CUTI N-2"] ?? r["N-2"] ?? 0;
+
           return {
             no: r["NO"] || i + 1,
             nama: String(r["NAMA"] || "").trim(),
@@ -119,9 +127,9 @@ export default function EmployeeDirTab({ employees, onUpdateEmployees }) {
             masaKerjaTahun: yrs,
             password: String(r["PASSWORD"] || "").trim(),
             role,
-            kuotaN: parseInt(r["CUTI N"] || r["N"] || 12, 10),
-            kuotaN1: parseInt(r["CUTI N-1"] || r["N-1"] || (String(r["STATUS KEPEGAWAIAN"]).includes("PNS") && yrs >= 2 ? 6 : 0), 10),
-            kuotaN2: parseInt(r["CUTI N-2"] || r["N-2"] || 0, 10)
+            kuotaN: isNaN(parseInt(rawN, 10)) ? 12 : parseInt(rawN, 10),
+            kuotaN1: isNaN(parseInt(rawN1, 10)) ? 0 : parseInt(rawN1, 10),
+            kuotaN2: isNaN(parseInt(rawN2, 10)) ? 0 : parseInt(rawN2, 10),
           };
         });
 
